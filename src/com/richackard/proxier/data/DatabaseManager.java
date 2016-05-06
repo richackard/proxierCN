@@ -29,6 +29,8 @@ public class DatabaseManager {
     static final String DISABLE_COUNT_COL = "DisableCount";
 
     static final String DB_FILE = "DB_FILE";
+    static final String SERVER_NAME = "SERVER_NAME";
+    static final String VERSION_NUMBER = "VERSION";
     static boolean connected = false;
 
     public DatabaseManager() throws ClassNotFoundException{
@@ -207,6 +209,15 @@ public class DatabaseManager {
             System.out.println("Speed Checking Failed.");
             return -1;
         }
+    }
+
+
+    public String getWelcomeMessage(){
+        PropertiesManager props = PropertiesManager.getPropertiesManager();
+        StringBuffer sb = new StringBuffer();
+        sb.append(new Date() + "\n");
+        sb.append(props.getProperty(SERVER_NAME) + " Version: " + props.getProperty(VERSION_NUMBER));
+        return sb.toString();
     }
 
 

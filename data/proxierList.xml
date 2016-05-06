@@ -6,7 +6,10 @@
 -->
 <properties>
     <property_list>
+        <property name="SERVER_NAME"    value="ProxierCN Server"></property>
+        <property name="VERSION"   value="1.0"></property>
         <property name="DB_FILE"   value="./data/proxierlist.db"></property>
+        
 
     </property_list>
     <property_options_list>
