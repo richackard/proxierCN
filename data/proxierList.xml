@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    This XML file allows us to easily customize the look and language used
+    in our program's user interface. Note that this properties file is only
+    for the workspace controls, which are custom for each application
+-->
+<properties>
+    <property_list>
+        <property name="DB_FILE"   value="./data/proxierlist.db"></property>
+
+    </property_list>
+    <property_options_list>
+    </property_options_list>
+</properties>
