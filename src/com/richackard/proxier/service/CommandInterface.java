@@ -24,6 +24,7 @@ public class CommandInterface {
     static final String COMMAND_DISCONNECT_DB = "disconnectdb";
     static final String COMMAND_EXIT_SERVER = "shutdown";
     static final String COMMAND_ADD_SERVER = "add";
+    static final String COMMAND_GENERATE_DATA = "generate";
     static final String COMMAND_DELETE_SERVER = "delete";
     static final String COMMAND_INJECT_SQL = "inject";
 
@@ -57,9 +58,18 @@ public class CommandInterface {
         switch(command){
             case COMMAND_REFRESH:{
                 controller.refreshImmediately();
+                break;
             }
             case COMMAND_CHECK:{
                 controller.checkImmediately();
+                break;
+            }
+            case COMMAND_EXIT_SERVER:{
+                controller.shutDown();
+                break;
+            }
+            case COMMAND_GENERATE_DATA:{
+                controller.generateData();
             }
         }
     }

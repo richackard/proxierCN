@@ -3,11 +3,19 @@ package com.richackard.proxier.data;
 
 import properties_manager.PropertiesManager;
 import xml_utilities.InvalidXMLFileFormatException;
+
+import javax.json.*;
+import javax.json.stream.JsonGenerator;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.net.*;
 import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * This class serves as the DB Manager Module for this application.
@@ -31,7 +39,11 @@ public class DatabaseManager {
     static final String SERVER_NAME = "SERVER_NAME";
     static final String VERSION_NUMBER = "VERSION";
 
-    static final String MUSICEASE_SERVER = "http://music.163.com/";
+    static final String JSON_NAME = "serverlist.json";
+
+    static final String FILE_PATH = DATA_PATH + JSON_NAME;
+
+    static final String NETEASE_SERVER = "http://music.163.com/";
     static boolean connected = false;
 
     public DatabaseManager() throws ClassNotFoundException{
@@ -102,6 +114,7 @@ public class DatabaseManager {
                 stmt.executeUpdate(sql);
             }
             catch(SQLException sqle){
+                sqle.printStackTrace();
                 System.out.println("Error Occurred During DB Update.");
             }
         }
@@ -306,6 +319,45 @@ public class DatabaseManager {
         }
     }
 
+    /**
+     * This method is used to generate the JSON data.
+     */
+    public void generateData(){
+        JsonObjectBuilder jBuilder = Json.createObjectBuilder();
+        StringWriter sw = new StringWriter();
+        String sqlQuery = String.format("SELECT * FROM %s WHERE %s=\"%s\";",
+                TABLE_NAME,
+                DISABLED_COL,
+                "false");
+        ResultSet set = queryDB(sqlQuery);
+        int i = 1;
+        try {
+            while(set.next()){
+                jBuilder.add(Integer.toString(i), Json.createObjectBuilder().
+                        add("ip", set.getString(SERVER_IP_COL)).
+                        add("port", set.getInt(PORT_COL)));
+                i++;
+            }
+            Map<String, Object> properties = new HashMap<>(1);
+            properties.put(JsonGenerator.PRETTY_PRINTING, true);
+            JsonWriterFactory jFactory = Json.createWriterFactory(properties);
+
+            JsonObject jo = jBuilder.build();
+            JsonWriter jw = jFactory.createWriter(sw);
+            jw.write(jo);
+            String output = sw.toString();
+            PrintWriter pw = new PrintWriter(FILE_PATH);
+            pw.write(output);
+            pw.close();
+        }
+        catch(SQLException sqle){
+            System.out.println("Error Occurred During SQL Query.");
+        }
+        catch(FileNotFoundException ffe){
+            System.out.println("File I/O Error.");
+        }
+
+    }
 
     public static String getWelcomeMessage(){
         PropertiesManager props = PropertiesManager.getPropertiesManager();
@@ -319,10 +371,11 @@ public class DatabaseManager {
     public static boolean checkProxy(String ip, int port){
         try {
             Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(ip, port));
-            HttpURLConnection conn = (HttpURLConnection) new URL(MUSICEASE_SERVER).openConnection(proxy);
+            HttpURLConnection conn = (HttpURLConnection) new URL(NETEASE_SERVER).openConnection(proxy);
             conn.setConnectTimeout(2000);
             conn.setRequestMethod("GET");
             int responseCode = conn.getResponseCode();
+
             System.out.printf("IP: %s, Port: %d => Response Code: %d\n", ip, port, responseCode);
             if(responseCode == 200)
                 return true;

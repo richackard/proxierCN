@@ -27,6 +27,16 @@ public class CheckingDataTask implements Runnable {
             databaseManager.checkServers();;
             System.out.printf("\n%s => Checking Task Finished Running...\n",
                     new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
+            System.out.printf("\n%s => Generating JSON Data...\n",
+                    new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
+            generateData();
+            System.out.printf("\n%s => Finished Generating JSON Data...\n",
+                    new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
         }
+    }
+
+
+    public synchronized void generateData(){
+        databaseManager.generateData();
     }
 }

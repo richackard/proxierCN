@@ -22,6 +22,14 @@ public class ProxierController {
         service.checkImmediately();;
     }
 
+    public void shutDown(){
+        service.shutDown();
+    }
+
+    public void generateData(){
+        service.generateData();
+    }
+
     public void helpMenu(){
 
     }

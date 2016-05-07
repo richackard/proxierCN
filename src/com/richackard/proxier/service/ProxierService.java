@@ -72,6 +72,19 @@ public class ProxierService {
         executor.execute(new CheckingDataTask(databasemgr));
     }
 
+    /**
+     * This method is used to generate Json data corresponding to the available servers in the db.
+     */
+    public void generateData(){
+        databasemgr.generateData();
+    }
+
+    public void shutDown(){
+        databasemgr.disconnect();
+        System.out.println("Service Shut Down Successfully...");
+        System.exit(0);
+    }
+
 
 
 
