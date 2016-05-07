@@ -13,4 +13,17 @@ public class ProxierController {
         this.service = ps;
     }
 
+
+    public void refreshImmediately(){
+        service.refreshImmediately();
+    }
+
+    public void checkImmediately(){
+        service.checkImmediately();;
+    }
+
+    public void helpMenu(){
+
+    }
+
 }

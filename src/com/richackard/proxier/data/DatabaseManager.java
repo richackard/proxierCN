@@ -196,6 +196,91 @@ public class DatabaseManager {
 
 
     /**
+     * This method is used to go through all servers and check for availability.
+     */
+    public void checkServers(){
+        if(connected){
+            String sqlQuery = String.format("SELECT * FROM %s", TABLE_NAME);
+            ResultSet set = queryDB(sqlQuery);
+            try {
+                while(set.next()){
+                    // Get the ip address
+                    String ip = set.getString(SERVER_IP_COL);
+                    // Get the port number of the proxy server.
+                    int port = set.getInt(PORT_COL);
+                    // If the proxy server's connectivity is good.
+                    if(checkProxy(ip, port)){
+                        // Ping server and get the speed.
+                        int speed = checkSpeed(ip);
+                        String sqlUpdate = null;
+                        if(speed > 0) {
+                            sqlUpdate = String.format("UPDATE %s SET %s=\"false\", %s=\"%d\", %s=\"%d\" WHERE %s=\"%s\" AND %s=\"%d\";",
+                                    TABLE_NAME,
+                                    DISABLED_COL,
+                                    LAST_RECORDED_SPEED_COL,
+                                    speed,
+                                    DISABLE_COUNT_COL,
+                                    0,
+                                    SERVER_IP_COL,
+                                    ip,
+                                    PORT_COL,
+                                    port);
+                        }
+                        else{
+                            sqlUpdate = String.format("UPDATE %s SET %s=\"false\", %s=\"%d\" WHERE %s=\"%s\" AND %s=\"%d\";",
+                                    TABLE_NAME,
+                                    DISABLED_COL,
+                                    DISABLE_COUNT_COL,
+                                    0,
+                                    SERVER_IP_COL,
+                                    ip,
+                                    PORT_COL,
+                                    port);
+                        }
+                        updateDB(sqlUpdate);
+                    }
+                    else{
+                        // If the server has already failed the test for 5 times, then delete it from the db.
+                        int disabledCount = set.getInt(DISABLE_COUNT_COL);
+                        String sqlUpdate = null;
+                        if(disabledCount == 5){
+                            System.out.printf("Server %s with port %d is no longer available and is going to be deleted from DB...\n",
+                                    ip,
+                                    port);
+                            sqlUpdate = String.format("DELETE FROM %s WHERE %s=\"%s\" AND %s=\"%d\";",
+                                    TABLE_NAME,
+                                    SERVER_IP_COL,
+                                    ip,
+                                    PORT_COL,
+                                    port);
+                        }
+                        else{
+                            System.out.printf("Server %s with port %d is not available. It has already failed the check %d times...\n",
+                                    ip,
+                                    port,
+                                    disabledCount);
+                            sqlUpdate = String.format("UPDATE %s SET %s=\"true\", %s=\"%d\" WHERE %s=\"%s\" AND %s=\"%d\";",
+                                    TABLE_NAME,
+                                    DISABLED_COL,
+                                    DISABLE_COUNT_COL,
+                                    ++disabledCount,
+                                    SERVER_IP_COL,
+                                    ip,
+                                    PORT_COL,
+                                    port);
+                        }
+                        updateDB(sqlUpdate);
+                    }
+                }
+            }
+            catch(SQLException sqle){
+                System.out.println("Error During DB Query.");
+            }
+        }
+    }
+
+
+    /**
      * This method is used to check the time needed to reach to a specific host.
      * It is going to take 5 samples and calculate the average
      * @param host target host.
@@ -229,6 +314,7 @@ public class DatabaseManager {
         sb.append(props.getProperty(SERVER_NAME) + " Version: " + props.getProperty(VERSION_NUMBER));
         return sb.toString();
     }
+
 
     public static boolean checkProxy(String ip, int port){
         try {

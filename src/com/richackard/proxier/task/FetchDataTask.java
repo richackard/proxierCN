@@ -17,6 +17,8 @@ import java.util.List;
  * This class represents a task which is to fetch new server from websites.
  */
 public class FetchDataTask implements Runnable {
+    static final String lock = "";
+
 
     static final String CNPROXY = "http://cn-proxy.com/";
 
@@ -29,11 +31,13 @@ public class FetchDataTask implements Runnable {
 
     @Override
     public void run(){
-        System.out.printf("\n%s => Scheduled Fetching Task Starts Running...\n",
-                new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
-        fetchFromProxyCN();
-        System.out.printf("\n%s => Fetching Task Finished Running...",
-                new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
+        synchronized (lock) {
+            System.out.printf("\n%s => Scheduled Fetching Task Starts Running...\n",
+                    new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
+            fetchFromProxyCN();
+            System.out.printf("\n%s => Fetching Task Finished Running...",
+                    new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
+        }
     }
 
 

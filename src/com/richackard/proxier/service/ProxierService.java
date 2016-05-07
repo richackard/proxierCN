@@ -5,6 +5,8 @@ import com.richackard.proxier.data.DatabaseManager;
 import com.richackard.proxier.task.CheckingDataTask;
 import com.richackard.proxier.task.FetchDataTask;
 import properties_manager.PropertiesManager;
+
+import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -18,7 +20,7 @@ public class ProxierService {
 
     static final String REFRESHING_TIME = "REFRESHING_TIME";
     static final String CHECKING_TIME = "CHECKING_TIME";
-
+    static final Executor executor = Executors.newSingleThreadExecutor();
     static int initialDelay = 5;
     static int refreshingTime = -1;
     static int checkingTime = -1;
@@ -49,11 +51,28 @@ public class ProxierService {
 
 
     private void setUpSchedules(){
-        this.scheduler = Executors.newScheduledThreadPool(5);
+        this.scheduler = Executors.newScheduledThreadPool(1);
         // Set up two tasks,
         scheduler.scheduleAtFixedRate(new FetchDataTask(databasemgr), initialDelay, refreshingTime , TimeUnit.SECONDS);
-        //scheduler.scheduleAtFixedRate(new CheckingDataTask(), initialDelay, checkingTime, TimeUnit.SECONDS);
+        scheduler.scheduleAtFixedRate(new CheckingDataTask(databasemgr), initialDelay, checkingTime, TimeUnit.SECONDS);
     }
+
+
+    /**
+     * This method is used to fetch data immediately.
+     */
+    public void refreshImmediately(){
+        executor.execute(new FetchDataTask(databasemgr));
+    }
+
+    /**
+     * This method is used to check data immediately.
+     */
+    public void checkImmediately(){
+        executor.execute(new CheckingDataTask(databasemgr));
+    }
+
+
 
 
 

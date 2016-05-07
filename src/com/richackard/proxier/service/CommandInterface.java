@@ -2,6 +2,7 @@ package com.richackard.proxier.service;
 
 
 import com.richackard.proxier.data.DatabaseManager;
+import com.richackard.proxier.task.FetchDataTask;
 
 import java.util.Scanner;
 
@@ -53,6 +54,14 @@ public class CommandInterface {
      */
     private void processCommand(String command){
         command = command.trim();
+        switch(command){
+            case COMMAND_REFRESH:{
+                controller.refreshImmediately();
+            }
+            case COMMAND_CHECK:{
+                controller.checkImmediately();
+            }
+        }
     }
 
 
