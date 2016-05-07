@@ -6,7 +6,13 @@
 -->
 <properties>
     <property_list>
-        <property name="DB_FILE"   value="./data/proxierlist.db"></property>
+        <property name="SERVER_NAME"        value="ProxierCN Server"></property>
+        <property name="VERSION"            value="1.0"></property>
+        <property name="DB_FILE"            value="./data/proxierlist.db"></property>
+        <property name="REFRESHING_TIME"    value="1800"></property>
+        <property name="CHECKING_TIME"      value="1200"></property>
+        
+        
 
     </property_list>
     <property_options_list>

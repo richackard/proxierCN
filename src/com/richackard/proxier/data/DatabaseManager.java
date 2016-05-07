@@ -4,8 +4,7 @@ package com.richackard.proxier.data;
 import properties_manager.PropertiesManager;
 import xml_utilities.InvalidXMLFileFormatException;
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -29,6 +28,10 @@ public class DatabaseManager {
     static final String DISABLE_COUNT_COL = "DisableCount";
 
     static final String DB_FILE = "DB_FILE";
+    static final String SERVER_NAME = "SERVER_NAME";
+    static final String VERSION_NUMBER = "VERSION";
+
+    static final String MUSICEASE_SERVER = "http://music.163.com/";
     static boolean connected = false;
 
     public DatabaseManager() throws ClassNotFoundException{
@@ -74,7 +77,7 @@ public class DatabaseManager {
      * @param sql query sql statement to be executes.
      * @return the result set if query successfully executed, null otherise.
      */
-    public ResultSet queryDB(String sql){
+    public synchronized ResultSet queryDB(String sql){
         if(connected){
             try{
                 Statement stmt = dbConnection.createStatement();
@@ -92,7 +95,7 @@ public class DatabaseManager {
      * This method is used to update DB using a SQL statement.
      * @param sql the sql statement to be executed.
      */
-    public void updateDB(String sql){
+    public synchronized void updateDB(String sql){
         if(connected){
             try {
                 Statement stmt = dbConnection.createStatement();
@@ -148,40 +151,49 @@ public class DatabaseManager {
      * @param ip the new server's ip
      * @param port the new server's port
      */
-    public void addServer(String ip, int port) throws Exception{
+    public void addServer(String ip, int port){
         if(connected){
-            String sqlQuery = String.format("SELECT %s, %s FROM %s WHERE %s=\"%s\" AND %s=\"%d\";",
-                    SERVER_IP_COL,
-                    PORT_COL,
-                    TABLE_NAME,
-                    SERVER_IP_COL,
-                    ip,
-                    PORT_COL,
-                    port);
-            System.out.println(sqlQuery);
-            ResultSet result = queryDB(sqlQuery);
-            // This server is not in the database.
-            if(!result.next()){
-                // First check speed, if speed is a value that is greater than 0, it is a valid server.
-                int time = checkSpeed(ip);
-                // If time is valid, then add the record.
-                if(time >= 0){
-                    String insertSql = String
-                            .format("INSERT INTO %s (%s, %s, %s, %s, %s, %s) VALUES (\"%s\", \"%d\", \"%s\", \"%d\", \"%s\", \"%d\" );",
-                                    TABLE_NAME, SERVER_IP_COL, PORT_COL, DISABLED_COL, LAST_RECORDED_SPEED_COL, CREATEDATE_COL, DISABLE_COUNT_COL,
-                                    ip, port, "false", time, new SimpleDateFormat("yyyy-MM-dd").format(new Date()) ,0);
-                    updateDB(insertSql);
-                    System.out.printf("Server: %s with port %d added to the server\n", ip, port);
-                }
-                else{
-                    System.out.printf("Host %s is not reachable\n", ip);
+            try {
+                String sqlQuery = String.format("SELECT %s, %s FROM %s WHERE %s=\"%s\" AND %s=\"%d\";",
+                        SERVER_IP_COL,
+                        PORT_COL,
+                        TABLE_NAME,
+                        SERVER_IP_COL,
+                        ip,
+                        PORT_COL,
+                        port);
+                //System.out.println(sqlQuery);
+                ResultSet result = queryDB(sqlQuery);
+                // This server is not in the database.
+                if (!result.next()) {
+                    // First check speed, if speed is a value that is greater than 0, it is a valid server.
+                    int time = checkSpeed(ip);
+                    // If time is valid, then add the record.
+                    if (time >= 0) {
+                        if(checkProxy(ip, port)) {
+                            String insertSql = String
+                                    .format("INSERT INTO %s (%s, %s, %s, %s, %s, %s) VALUES (\"%s\", \"%d\", \"%s\", \"%d\", \"%s\", \"%d\" );",
+                                            TABLE_NAME, SERVER_IP_COL, PORT_COL, DISABLED_COL, LAST_RECORDED_SPEED_COL, CREATEDATE_COL, DISABLE_COUNT_COL,
+                                            ip, port, "false", time, new SimpleDateFormat("yyyy-MM-dd").format(new Date()), 0);
+                            updateDB(insertSql);
+                            System.out.printf("Server: %s with port %d added to the server\n", ip, port);
+                        }
+                        else{
+                            System.out.printf("Host %s is not usable.\n", ip);
+                        }
+                    } else {
+                        System.out.printf("Host %s is not reachable.\n", ip);
+                    }
+                } else {
+                    System.out.println("Host existed in the DB.");
                 }
             }
-            else{
-                System.out.println("Host existed in the DB.");
+            catch(SQLException sqle){
+                System.out.println("Error Occurred During DB Query.");
             }
         }
     }
+
 
     /**
      * This method is used to check the time needed to reach to a specific host.
@@ -210,7 +222,33 @@ public class DatabaseManager {
     }
 
 
-    public void printAllServers(){
-
+    public static String getWelcomeMessage(){
+        PropertiesManager props = PropertiesManager.getPropertiesManager();
+        StringBuffer sb = new StringBuffer();
+        sb.append(new Date() + "\n");
+        sb.append(props.getProperty(SERVER_NAME) + " Version: " + props.getProperty(VERSION_NUMBER));
+        return sb.toString();
     }
+
+    public static boolean checkProxy(String ip, int port){
+        try {
+            Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(ip, port));
+            HttpURLConnection conn = (HttpURLConnection) new URL(MUSICEASE_SERVER).openConnection(proxy);
+            conn.setConnectTimeout(2000);
+            conn.setRequestMethod("GET");
+            int responseCode = conn.getResponseCode();
+            System.out.printf("IP: %s, Port: %d => Response Code: %d\n", ip, port, responseCode);
+            if(responseCode == 200)
+                return true;
+            return false;
+        }
+        catch(MalformedURLException me){
+            System.out.println("Invalid Domain Detected...");
+        }
+        catch(IOException ioe){
+            System.out.println("Error Occurred During Proxy Checking...");
+        }
+        return false;
+    }
+
 }
