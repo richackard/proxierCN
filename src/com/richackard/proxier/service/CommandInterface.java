@@ -1,5 +1,6 @@
 package com.richackard.proxier.service;
 
+
 import com.richackard.proxier.data.DatabaseManager;
 
 import java.util.Scanner;
@@ -12,7 +13,7 @@ public class CommandInterface {
 
     private Scanner input;
 
-    private DatabaseManager datamanager;
+    private ProxierController controller;
 
     static final String COMMAND_CHECK = "check";
     static final String COMMAND_REFRESH = "refresh";
@@ -26,10 +27,10 @@ public class CommandInterface {
     static final String COMMAND_INJECT_SQL = "inject";
 
 
-    public CommandInterface(DatabaseManager datamgr){
+    public CommandInterface(ProxierController dataControl){
         input = new Scanner(System.in);
-        this.datamanager = datamgr;
         System.out.println("Launching Interface...");
+        this.controller = dataControl;
         launchInterface();
     }
 
@@ -39,16 +40,19 @@ public class CommandInterface {
      */
     private void launchInterface(){
         System.out.println("Interface Launched Successfully...");
-        consoleWrite(datamanager.getWelcomeMessage());
-        String command = null;
+        consoleWrite(DatabaseManager.getWelcomeMessage());
         while(true){
             System.out.print(">> ");
             processCommand(input.nextLine());
         }
     }
 
+    /**
+     * This method is used to interact with controller module with specific commands.
+     * @param command the command to be executed.
+     */
     private void processCommand(String command){
-        consoleWrite(command);
+        command = command.trim();
     }
 
 
