@@ -6,11 +6,10 @@ import xml_utilities.InvalidXMLFileFormatException;
 
 import javax.json.*;
 import javax.json.stream.JsonGenerator;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import java.io.*;
 import java.net.*;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -325,14 +324,16 @@ public class DatabaseManager {
     public void generateData(){
         JsonObjectBuilder jBuilder = Json.createObjectBuilder();
         StringWriter sw = new StringWriter();
-        String sqlQuery = String.format("SELECT * FROM %s WHERE %s=\"%s\";",
+        String sqlQuery = String.format("SELECT * FROM %s WHERE %s=\"%s\" ORDER BY %s ASC;",
                 TABLE_NAME,
                 DISABLED_COL,
-                "false");
+                "false",
+                LAST_RECORDED_SPEED_COL);
         ResultSet set = queryDB(sqlQuery);
         int i = 1;
         try {
             while(set.next()){
+                jBuilder.add("JSON Generated Time", (new Date()).toString());
                 jBuilder.add(Integer.toString(i), Json.createObjectBuilder().
                         add("ip", set.getString(SERVER_IP_COL)).
                         add("port", set.getInt(PORT_COL)));
@@ -349,11 +350,15 @@ public class DatabaseManager {
             PrintWriter pw = new PrintWriter(FILE_PATH);
             pw.write(output);
             pw.close();
+
+            File original = new File(FILE_PATH);
+            File target = new File("/var/www/html/serverlist.json");
+            Files.copy(original.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
         }
         catch(SQLException sqle){
             System.out.println("Error Occurred During SQL Query.");
         }
-        catch(FileNotFoundException ffe){
+        catch(IOException ioe){
             System.out.println("File I/O Error.");
         }
 
@@ -369,14 +374,19 @@ public class DatabaseManager {
 
 
     public static boolean checkProxy(String ip, int port){
+        BufferedReader br = null;
         try {
             Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(ip, port));
             HttpURLConnection conn = (HttpURLConnection) new URL(NETEASE_SERVER).openConnection(proxy);
-            conn.setConnectTimeout(2000);
+            conn.setConnectTimeout(1000);
+            conn.setReadTimeout(1000);
             conn.setRequestMethod("GET");
-            int responseCode = conn.getResponseCode();
+            br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            br.readLine();
 
+            int responseCode = conn.getResponseCode();
             System.out.printf("IP: %s, Port: %d => Response Code: %d\n", ip, port, responseCode);
+
             if(responseCode == 200)
                 return true;
             return false;
@@ -385,7 +395,16 @@ public class DatabaseManager {
             System.out.println("Invalid Domain Detected...");
         }
         catch(IOException ioe){
-            System.out.println("Error Occurred During Proxy Checking...");
+            System.out.printf("IP: %s, Port: %d Failed to respond...\n", ip, port);
+        }
+        finally{
+            try {
+                if (br != null)
+                    br.close();
+            }
+            catch(IOException ioe){
+                System.out.println("Error Occurred During Input Stream Closing Process.");
+            }
         }
         return false;
     }

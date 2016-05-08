@@ -6,10 +6,7 @@ import com.richackard.proxier.task.CheckingDataTask;
 import com.richackard.proxier.task.FetchDataTask;
 import properties_manager.PropertiesManager;
 
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * This class serves as the service module for the application,
@@ -20,7 +17,7 @@ public class ProxierService {
 
     static final String REFRESHING_TIME = "REFRESHING_TIME";
     static final String CHECKING_TIME = "CHECKING_TIME";
-    static final Executor executor = Executors.newSingleThreadExecutor();
+    static final ExecutorService executor = Executors.newSingleThreadExecutor();
     static int initialDelay = 5;
     static int refreshingTime = -1;
     static int checkingTime = -1;
