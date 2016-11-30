@@ -35,7 +35,7 @@
         <option name="PATH_TO_PPK" value="" />
       </value>
     </option>
-    <option name="PATH_TO_PASSWORD_FILE" />
+    <option name="PATH_TO_PASSWORD_FILE" value="$userdir/.cvspass" />
     <option name="TIMEOUT" value="10" />
     <option name="MAKE_CHECKED_OUT_FILES_READONLY" value="false" />
     <option name="CHECKOUT_PRUNE_EMPTY_DIRECTORIES" value="true" />
@@ -102,5 +102,9 @@
       <option name="PATTERN" value="kotlin.*" />
       <option name="ENABLED" value="true" />
     </filter>
+  </component>
+  <component name="JavaFxSettings">
+    <option name="pathToSceneBuilder" value="/Applications/JavaFX Scene Builder 2.0.app" />
+    <option name="myPathToSceneBuilder" value="/Applications/JavaFX Scene Builder 2.0.app" />
   </component>
 </application>
