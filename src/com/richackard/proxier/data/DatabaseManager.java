@@ -45,7 +45,7 @@ public class DatabaseManager {
     static final String NETEASE_SERVER = "http://music.163.com/";
     static boolean connected = false;
 
-    public DatabaseManager() throws ClassNotFoundException{
+    public DatabaseManager() throws CalassNotFoundException{
         // Load the database driver.
         Class.forName("org.sqlite.JDBC");
 
@@ -352,7 +352,7 @@ public class DatabaseManager {
             pw.close();
 
             File original = new File(FILE_PATH);
-            File target = new File("/var/www/html/serverlist.json");
+            File target = new File("/var/www/html/richard/serverlist.json");
             Files.copy(original.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
         }
         catch(SQLException sqle){

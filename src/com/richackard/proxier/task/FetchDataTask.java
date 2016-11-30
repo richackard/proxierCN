@@ -106,7 +106,6 @@ public class FetchDataTask implements Runnable {
             if((startIndex = htmlText.indexOf(startTag, endIndex)) == -1)
                 break;
         }
-
         return list;
     }
 }
