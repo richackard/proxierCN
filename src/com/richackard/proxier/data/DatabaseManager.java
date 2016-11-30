@@ -45,7 +45,7 @@ public class DatabaseManager {
     static final String NETEASE_SERVER = "http://music.163.com/";
     static boolean connected = false;
 
-    public DatabaseManager() throws CalassNotFoundException{
+    public DatabaseManager() throws ClassNotFoundException{
         // Load the database driver.
         Class.forName("org.sqlite.JDBC");
 
