@@ -11,10 +11,13 @@ public class Startup {
         try {
             // Initialize DB Module.
             DatabaseManager db = new DatabaseManager();
+
             // Initialize Service Module.
             ProxierService service = new ProxierService(db);
+
             // Initialize Controller Module.
             ProxierController controller = new ProxierController(service);
+
             // Initialize Command Line Interface.
             CommandInterface cli = new CommandInterface(controller);
         }

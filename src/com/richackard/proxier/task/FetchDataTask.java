@@ -12,6 +12,8 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * This class represents a task which is to fetch new server from websites.
@@ -48,7 +50,7 @@ public class FetchDataTask implements Runnable {
             String inputLine = null;
             StringBuffer sb = new StringBuffer();
             while((inputLine = reader.readLine()) != null) {
-                sb.append(inputLine);
+                sb.append(inputLine.trim());
             }
             List<ServerEntity> resultList = analyzeServers(sb);
             for(ServerEntity entity: resultList){
@@ -60,51 +62,23 @@ public class FetchDataTask implements Runnable {
             System.out.println("CNProxy Domain Not Working");
         }
         catch(IOException ioe){
+            System.out.print(ioe);
             System.out.println("IOException Occurred While Connecting to the cn proxy.");
         }
     }
 
     public synchronized List<ServerEntity> analyzeServers(StringBuffer htmlText){
         List<ServerEntity> list = new ArrayList<>();
-        String startTag = "<tbody>";
-        String endingTag = "</tbody>";
-        String ipStartTag = "<tr>";
-        String portStartTag = "<td>";
-        // Index of the first <tbody> tag.
-        int startIndex = htmlText.indexOf(startTag);
-        while(true) {
-
-            // Index of the first </tbody> tag
-            int endIndex = htmlText.indexOf(endingTag, startIndex);
-            // Cut a block which is contained by a pair of <tbody> tag.
-            String validListBlock = htmlText.substring(startIndex, endIndex + 8);
-            int trIndex = validListBlock.indexOf(ipStartTag);
-
-            // This loop is going to parse a specific <tbody></tbody> block.
-            while (true) {
-                int ipStartingIndex = validListBlock.indexOf("d>", trIndex) + 2;
-                int ipEndingIndex = validListBlock.indexOf("<", ipStartingIndex);
-                String ipAddress = validListBlock.substring(ipStartingIndex, ipEndingIndex);
-
-                int portStartingIndex = validListBlock.indexOf(portStartTag, ipEndingIndex) + 4;
-                int portEndingIndex = validListBlock.indexOf("<", portStartingIndex);
-                int port = Integer.parseInt(validListBlock.substring(portStartingIndex, portEndingIndex));
-
-                int speedStartingIndex = validListBlock.indexOf("width: ", portEndingIndex) + 7;
-                int speedEndingIndex = validListBlock.indexOf("%", speedStartingIndex);
-
-                int speed = Integer.parseInt(validListBlock.substring(speedStartingIndex, speedEndingIndex));
-                if(speed > 75)
-                    list.add(new ServerEntity(ipAddress, port));
-                else
-                    System.out.printf("Host : %s Rejected due to low speed.\n", ipAddress);
-
-                if ((trIndex = validListBlock.indexOf(ipStartTag, ipStartingIndex)) == -1)
-                    break;
-            }
-
-            if((startIndex = htmlText.indexOf(startTag, endIndex)) == -1)
-                break;
+        Pattern ipAndPort = Pattern.compile("<td>(\\d+\\.\\d+\\.\\d+\\.\\d+)<\\/td>\\s*?<td>(\\d+)<\\/td>.*?width:\\s*(\\d+)%");
+        Matcher matcher = ipAndPort.matcher(htmlText.toString().trim());
+        while(matcher.find()) {
+            String ipAddress = matcher.group(1);
+            int port = Integer.parseInt(matcher.group(2));
+            int speed = Integer.parseInt(matcher.group(3));
+            if(speed > 75)
+                list.add(new ServerEntity(ipAddress, port));
+            else
+                System.out.printf("Host : %s Rejected due to low speed.\n", ipAddress);
         }
         return list;
     }

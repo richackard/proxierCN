@@ -352,7 +352,7 @@ public class DatabaseManager {
             pw.close();
 
             File original = new File(FILE_PATH);
-            File target = new File("/var/www/html/richard/serverlist.json");
+            File target = new File("/Users/richard/desktop/serverlist.json");
             Files.copy(original.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
         }
         catch(SQLException sqle){
