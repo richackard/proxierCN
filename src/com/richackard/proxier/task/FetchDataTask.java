@@ -79,6 +79,7 @@ public class FetchDataTask implements Runnable {
                 list.add(new ServerEntity(ipAddress, port));
             else
                 System.out.printf("Host : %s Rejected due to low speed.\n", ipAddress);
+            
         }
         return list;
     }
